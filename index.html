@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discord Role Gradient Color Tester</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style id="dynamic-font-style">
+        /* This will be dynamically populated by JavaScript */
+    </style>
+    <style>
+        /* Apply the custom font to the body */
+        body {
+            font-family: 'Custom Font', 'Inter', sans-serif;
+            background-color: #313338;
+        }
+        
+        /* Input field styles */
+        input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+        input[type="color"]::-webkit-color-swatch { border: none; border-radius: 0.375rem; }
+
+        /* Main container for username and glow effect */
+        .username-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        /* The animated gradient class */
+        .flowing-gradient {
+            -webkit-background-clip: text;
+            background-clip: text;
+            background-size: 100px auto;
+            -webkit-text-fill-color: transparent;
+            font-size: 1rem;
+            font-weight: 500;
+            line-height: 1.375rem;
+            vertical-align: baseline;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            background-image: linear-gradient(to right, var(--color1), var(--color2), var(--color1));
+            animation: gradientUsernameAnimation 1.5s linear infinite;
+        }
+
+        @keyframes gradientUsernameAnimation {
+            from { background-position: 0% 50%; }
+            to { background-position: 100px 50%; }
+        }
+
+        .main-username { position: relative; z-index: 2; }
+        
+        .username-glow {
+            position: absolute; top: 0; left: 0; height: 100%; width: 100%;
+            z-index: 1; filter: blur(4px); opacity: 0;
+            transition: opacity 0.1s ease-in-out;
+        }
+
+        .username-container:hover .username-glow { opacity: .7; }
+        
+        .message-container:hover .remove-message-button { opacity: 1; }
+
+        /* Style for rendered emotes in messages */
+        .rendered-emote {
+            width: 1.375rem;
+            height: 1.375rem;
+            display: inline-block;
+            vertical-align: bottom;
+            margin: 0 1px;
+        }
+
+        /* Styles for the slide-out advanced options panel */
+        #advancedOptionsPanel {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+    </style>
+</head>
+<body class="text-white antialiased">
+
+    <div class="max-w-3xl mx-auto p-4 md:p-6">
+        
+        <div class="bg-[#2b2d31] p-4 sm:p-6 rounded-lg shadow-lg mb-8">
+            <div class="flex justify-between items-center mb-4">
+                <h1 class="text-xl font-bold text-white">Discord Message Builder</h1>
+                <button id="toggleAdvancedBtn" class="p-1 text-gray-400 hover:text-white transition-colors" title="Advanced Options">
+                    <span class="text-2xl">⚙️</span>
+                </button>
+            </div>
+            
+            <div class="flex flex-col md:flex-row gap-x-6 gap-y-4">
+                <!-- Left Column -->
+                <div class="flex-1 flex flex-col gap-y-4">
+                    <div>
+                        <label for="username" class="block mb-1 text-sm font-medium text-gray-200">Username</label>
+                        <div class="flex items-center gap-2 bg-[#1e1f22] rounded-md p-2">
+                             <div id="username-container-preview-wrapper" class="relative flex-grow">
+                                <span id="username-preview" class="block w-full flowing-gradient font-bold text-lg whitespace-pre min-h-[24px] pointer-events-none"></span>
+                                <input type="text" id="username" value="kayo" class="absolute inset-0 w-full h-full bg-transparent text-transparent caret-white focus:outline-none font-bold text-lg">
+                             </div>
+                             <img id="roleIconPreview" src="" alt="Icon Preview" class="w-5 h-5 hidden">
+                        </div>
+                    </div>
+                     <div class="flex-1 flex flex-col">
+                        <label for="message" class="block mb-1 text-sm font-medium text-gray-200">Message</label>
+                        <textarea id="message" class="flex-1 w-full bg-[#1e1f22] rounded-md p-2 text-white focus:outline-none focus:ring-2 focus:ring-[#5865F2] resize-none" placeholder="Type your message here..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Right Column -->
+                <div class="flex-1 flex flex-col gap-y-4">
+                    <div>
+                        <label class="block mb-1 text-sm font-medium text-gray-200">Role Icon (Optional)</label>
+                         <div class="flex items-center">
+                            <input type="url" id="roleIconLink" placeholder="Paste image link..." class="w-full bg-[#1e1f22] rounded-l-md p-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#5865F2]">
+                             <label for="roleIconUpload" class="bg-[#40464f] hover:bg-[#4f5660] text-white text-sm font-semibold py-2 px-3 rounded-r-md cursor-pointer transition-colors duration-200">Browse</label>
+                             <input type="file" id="roleIconUpload" accept="image/*" class="hidden">
+                        </div>
+                    </div>
+                     <div class="relative">
+                        <div class="space-y-2 pr-12">
+                             <div>
+                                <label class="block mb-1 text-sm font-medium text-gray-200">Gradient Color 1</label>
+                                <div class="flex items-center bg-[#1e1f22] rounded-md p-2 h-12">
+                                    <input type="color" id="color1" value="#0056aa" class="w-8 h-8 rounded-md border-none bg-transparent cursor-pointer">
+                                    <input type="text" id="hex1" value="#0056aa" class="ml-2 w-full bg-transparent text-white focus:outline-none font-mono text-sm">
+                                    <button id="randomColor1Btn" class="bg-gray-600 hover:bg-gray-700 text-white font-semibold p-1 rounded-md transition-colors duration-200 ml-2" title="Random Color 1">🎲</button>
+                                </div>
+                            </div>
+                             <div>
+                                <label class="block mb-1 text-sm font-medium text-gray-200">Gradient Color 2</label>
+                                 <div class="flex items-center bg-[#1e1f22] rounded-md p-2 h-12">
+                                    <input type="color" id="color2" value="#2fbdff" class="w-8 h-8 rounded-md border-none bg-transparent cursor-pointer">
+                                    <input type="text" id="hex2" value="#2fbdff" class="ml-2 w-full bg-transparent text-white focus:outline-none font-mono text-sm">
+                                    <button id="randomColor2Btn" class="bg-gray-600 hover:bg-gray-700 text-white font-semibold p-1 rounded-md transition-colors duration-200 ml-2" title="Random Color 2">🎲</button>
+                                </div>
+                            </div>
+                        </div>
+                         <button id="randomizeBothBtn" class="absolute top-6 right-0 bottom-0 w-10 bg-purple-500 hover:bg-purple-600 text-white font-semibold rounded-md transition-colors duration-200 flex items-center justify-center" title="Randomize Both">
+                            <span class="transform -rotate-90 whitespace-nowrap text-xs tracking-wider">RANDOM</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Advanced Options Panel -->
+            <div id="advancedOptionsPanel" class="mt-4">
+                 <div class="bg-[#202225] rounded-md p-4 space-y-3">
+                    <h2 class="text-base font-semibold text-white -mt-1">Advanced Font Options</h2>
+                    <div>
+                        <label for="googleFontInput" class="block mb-1 text-sm font-medium text-gray-300">Google Font Family Name</label>
+                        <input type="text" id="googleFontInput" class="w-full bg-[#1e1f22] rounded-md p-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#5865F2]" placeholder="e.g., Inter or Roboto">
+                    </div>
+                    <div>
+                        <label for="directFontUrlInput" class="block mb-1 text-sm font-medium text-gray-300">Direct .woff2 Font URL</label>
+                        <input type="url" id="directFontUrlInput" class="w-full bg-[#1e1f22] rounded-md p-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#5865F2]" placeholder="e.g., https://example.com/font.woff2">
+                    </div>
+                 </div>
+            </div>
+            
+            <div class="flex flex-wrap gap-2 mt-6">
+                <button id="sendMessageBtn" class="flex-grow bg-[#5865F2] hover:bg-[#4752c4] text-white font-bold py-2 px-4 rounded-md transition-colors duration-200">
+                    Send Message
+                </button>
+                <button id="resetMessagesBtn" class="bg-red-600 hover:bg-red-700 text-white font-semibold p-2 rounded-md transition-colors duration-200 flex items-center justify-center" title="Reset Chat">
+                     <span class="text-lg">🗑️</span>
+                </button>
+            </div>
+        </div>
+
+        <div id="chat-log" class="bg-[#313338] p-4 rounded-lg space-y-1 min-h-[200px]">
+        </div>
+    </div>
+
+    <script>
+        const usernameInput = document.getElementById('username');
+        const usernamePreview = document.getElementById('username-preview');
+        const roleIconUploadInput = document.getElementById('roleIconUpload');
+        const roleIconLinkInput = document.getElementById('roleIconLink');
+        const roleIconPreview = document.getElementById('roleIconPreview');
+        const messageInput = document.getElementById('message');
+        const color1Input = document.getElementById('color1');
+        const color2Input = document.getElementById('color2');
+        const hex1Input = document.getElementById('hex1');
+        const hex2Input = document.getElementById('hex2');
+        const sendMessageBtn = document.getElementById('sendMessageBtn');
+        const resetMessagesBtn = document.getElementById('resetMessagesBtn');
+        const chatLog = document.getElementById('chat-log');
+        const randomColor1Btn = document.getElementById('randomColor1Btn');
+        const randomColor2Btn = document.getElementById('randomColor2Btn');
+        const randomizeBothBtn = document.getElementById('randomizeBothBtn');
+        const toggleAdvancedBtn = document.getElementById('toggleAdvancedBtn');
+        const advancedOptionsPanel = document.getElementById('advancedOptionsPanel');
+        const googleFontInput = document.getElementById('googleFontInput');
+        const directFontUrlInput = document.getElementById('directFontUrlInput');
+
+        function generateRandomColor() { return '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0'); }
+        function handleRandomColors() {
+            color1Input.value = generateRandomColor();
+            color2Input.value = generateRandomColor();
+            updateLivePreview();
+        }
+        function handleRandomColor1() {
+            color1Input.value = generateRandomColor();
+            updateLivePreview();
+        }
+        function handleRandomColor2() {
+            color2Input.value = generateRandomColor();
+            updateLivePreview();
+        }
+
+        function clearDynamicStyles() {
+            const oldStyleLink = document.getElementById('dynamic-stylesheet-link');
+            if (oldStyleLink) oldStyleLink.remove();
+            const oldFontFace = document.getElementById('dynamic-font-face');
+            if (oldFontFace) oldFontFace.remove();
+        }
+
+        function handleGoogleFontUpdate() {
+            const familyName = googleFontInput.value.trim();
+            if (!familyName) return;
+            directFontUrlInput.value = ''; // Clear other input
+            clearDynamicStyles();
+
+            const formattedFamily = familyName.replace(/ /g, '+');
+            const linkTag = document.createElement('link');
+            linkTag.id = 'dynamic-stylesheet-link';
+            linkTag.rel = 'stylesheet';
+            linkTag.href = `https://fonts.googleapis.com/css2?family=${formattedFamily}&display=swap`;
+            document.head.appendChild(linkTag);
+            
+            document.body.style.fontFamily = `'${familyName}', 'Inter', sans-serif`;
+        }
+
+        function handleDirectFontUrlUpdate() {
+            const url = directFontUrlInput.value.trim();
+            if (!url) return;
+            googleFontInput.value = ''; // Clear other input
+            clearDynamicStyles();
+
+            const styleTag = document.createElement('style');
+            styleTag.id = 'dynamic-font-face';
+            styleTag.textContent = `@font-face { font-family: 'Custom Font'; src: url('${url}') format('woff2'); font-weight: 500; font-style: normal; }`;
+            document.head.appendChild(styleTag);
+            document.body.style.fontFamily = "'Custom Font', 'Inter', sans-serif";
+        }
+        
+        function updateLivePreview() {
+            const username = usernameInput.value;
+            const color1 = color1Input.value;
+            const color2 = color2Input.value;
+            hex1Input.value = color1;
+            hex2Input.value = color2;
+            usernamePreview.textContent = username || '\u00A0';
+            usernamePreview.style.setProperty('--color1', color1);
+            usernamePreview.style.setProperty('--color2', color2);
+            const file = roleIconUploadInput.files[0];
+            const link = roleIconLinkInput.value.trim();
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    roleIconPreview.src = e.target.result;
+                    roleIconPreview.classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            } else if (link) {
+                roleIconPreview.src = link;
+                roleIconPreview.classList.remove('hidden');
+            } else {
+                roleIconPreview.classList.add('hidden');
+            }
+        }
+
+        function parseAndRenderEmotes(message) {
+            const emoteRegex = /<:(\w+):(\d+)>|https?:\/\/\S+/g;
+            return message.replace(emoteRegex, (match, name, id) => {
+                if (id) {
+                    return `<img src="https://cdn.discordapp.com/emojis/${id}.webp" alt="${name}" class="rendered-emote">`;
+                }
+                return match;
+            });
+        }
+        
+        function appendMessageToLog(username, message, color1, color2, iconSrc) {
+            const messageId = `msg-${Date.now()}-${Math.random()}`;
+            const messageElement = document.createElement('div');
+            messageElement.className = 'message-container group flex items-start space-x-4 p-2 -mx-2 hover:bg-[#2e3035] rounded-md relative';
+            messageElement.dataset.messageId = messageId;
+            const avatarLetter = username.charAt(0).toUpperCase() || 'U';
+            const avatarColor = color1.substring(1);
+            const roleIconHTML = iconSrc ? `<img src="${iconSrc}" alt="Role Icon" class="w-5 h-5 ml-1" title="Role Icon" onerror="this.style.display='none'">` : '';
+            const renderedMessage = parseAndRenderEmotes(message);
+
+            messageElement.innerHTML = `
+                <img src="https://placehold.co/40x40/${avatarColor}/FFFFFF?text=${avatarLetter}" alt="User Avatar" class="w-10 h-10 rounded-full mt-1">
+                <div class="flex-grow">
+                    <div class="flex items-center space-x-2">
+                        <div class="username-container" style="--color1: ${color1}; --color2: ${color2};">
+                            <span class="main-username flowing-gradient">${username}</span>
+                            <span class="username-glow flowing-gradient" aria-hidden="true">${username}</span>
+                        </div>
+                        ${roleIconHTML}
+                        <span class="text-gray-400 text-xs font-medium">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    </div>
+                    <p class="text-gray-200 whitespace-pre-wrap">${renderedMessage}</p>
+                </div>
+                <button data-remove-id="${messageId}" class="remove-message-button absolute top-1 right-1 p-1 rounded-full text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-700/80">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                      <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
+                    </svg>
+                </button>
+            `;
+            chatLog.appendChild(messageElement);
+            roleIconUploadInput.value = '';
+        }
+        
+        function sendMessage() {
+            const username = usernameInput.value.trim() || "User";
+            const message = messageInput.value.trim();
+            const color1 = color1Input.value;
+            const color2 = color2Input.value;
+            const file = roleIconUploadInput.files[0];
+            const link = roleIconLinkInput.value.trim();
+            if (!message) return;
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => appendMessageToLog(username, message, color1, color2, e.target.result);
+                reader.readAsDataURL(file);
+            } else if (link) {
+                 appendMessageToLog(username, message, color1, color2, link);
+            } else {
+                appendMessageToLog(username, message, color1, color2, null);
+            }
+        }
+
+        function updateColorFromHex(hexInput, colorInput) {
+            if (/^#[0-9A-F]{6}$/i.test(hexInput.value)) {
+                colorInput.value = hexInput.value;
+            }
+        }
+
+        // --- EVENT LISTENERS ---
+        sendMessageBtn.addEventListener('click', sendMessage);
+        randomColor1Btn.addEventListener('click', handleRandomColor1);
+        randomColor2Btn.addEventListener('click', handleRandomColor2);
+        randomizeBothBtn.addEventListener('click', handleRandomColors);
+        resetMessagesBtn.addEventListener('click', () => { chatLog.innerHTML = ''; });
+        
+        toggleAdvancedBtn.addEventListener('click', () => {
+            const panel = advancedOptionsPanel;
+            if (panel.style.maxHeight) {
+                panel.style.maxHeight = null;
+            } else {
+                panel.style.maxHeight = panel.scrollHeight + "px";
+            } 
+        });
+
+        googleFontInput.addEventListener('change', handleGoogleFontUpdate);
+        directFontUrlInput.addEventListener('change', handleDirectFontUrlUpdate);
+
+        messageInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        chatLog.addEventListener('click', (e) => {
+            const removeBtn = e.target.closest('[data-remove-id]');
+            if (!removeBtn) return;
+            const messageId = removeBtn.dataset.removeId;
+            const messageToRemove = chatLog.querySelector(`[data-message-id="${messageId}"]`);
+            if (messageToRemove) messageToRemove.remove();
+        });
+        
+        usernameInput.addEventListener('input', updateLivePreview);
+        color1Input.addEventListener('input', updateLivePreview);
+        color2Input.addEventListener('input', updateLivePreview);
+        roleIconLinkInput.addEventListener('input', updateLivePreview);
+        roleIconUploadInput.addEventListener('change', updateLivePreview);
+
+        hex1Input.addEventListener('change', () => {
+            updateColorFromHex(hex1Input, color1Input);
+            updateLivePreview();
+        });
+        hex2Input.addEventListener('change', () => {
+            updateColorFromHex(hex2Input, color2Input);
+            updateLivePreview();
+        });
+        
+        roleIconPreview.addEventListener('error', () => {
+             roleIconPreview.classList.add('hidden');
+        });
+        
+        // --- INITIAL SETUP ---
+        googleFontInput.value = 'Inter';
+        handleGoogleFontUpdate();
+        roleIconLinkInput.value = "https://cdn.discordapp.com/emojis/802251209490169917.webp";
+        messageInput.value = "this is an example message <:sapphire:908755206068650004>";
+        updateLivePreview();
+    </script>
+</body>
+</html>
