@@ -21,6 +21,7 @@ There are a couple of optional features (that do connect to external services if
 Just a heads-up, this is a personal project. I'll definitely be using it myself from time to time, but I can't promise I'll be actively maintaining it since I've got enough other stuff to do. That said, I'll try my best to look at any issues :)
 
 Pull requests are always welcome if you have an idea or a fix!
+
 ---
 
 ## Licensing
